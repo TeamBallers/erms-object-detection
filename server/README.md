@@ -25,8 +25,9 @@ Run the following command inside the `server/` directory:
 pip install -r requirements.txt
 ```
 
-## 2. Start the server
+## 2. Start the venv and server
 ```bash
+source yolo_env/bin/activate
 uvicorn yolo_api:app --host 0.0.0.0 --port 8000
 ```
 The server will run at:
