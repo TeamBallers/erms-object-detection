@@ -142,72 +142,69 @@
 </div>
 
 <script>
-const IMAGE_DIR = 'detections/';
-const POLL_MS = 5000;
+const SERVER = "http://100.112.38.70:8000"; //would need to change this to ur own IP
+const POLL_MS = 2000;
+
 let known = new Set();
 let total = 0;
 
-function ftime(f) {
-  const m = f.match(/(\d{8})_(\d{6})/);
-  if (!m) return f;
-  const d = m[1], t = m[2];
-  return `${d.slice(6)}/${d.slice(4,6)}/${d.slice(0,4)} ${t.slice(0,2)}:${t.slice(2,4)}:${t.slice(4)}`;
-}
-
-function notify(text) {
-  document.getElementById('notif-body').textContent = text;
-  const n = document.getElementById('notif');
-  n.classList.add('show');
-  setTimeout(() => n.classList.remove('show'), 3500);
-}
-
-function addCard(filename) {
+function addCard(url, filename) {
   const grid = document.getElementById('grid');
+
   const card = document.createElement('div');
   card.className = 'card';
+
   card.innerHTML = `
-    <img src="${IMAGE_DIR}${filename}" alt="${filename}" loading="lazy">
+    <img src="${SERVER}${url}" loading="lazy">
     <div class="card-info">
-      <div class="card-time">${ftime(filename)}</div>
+      <div class="card-time">${filename}</div>
     </div>
   `;
+
   grid.prepend(card);
 }
 
 function addLog(filename) {
   const log = document.getElementById('log');
+
   const item = document.createElement('div');
   item.className = 'log-item';
-  item.innerHTML = `<div class="log-label">${filename}</div><div class="log-time">${ftime(filename)}</div>`;
+  item.innerHTML = `<div class="log-label">${filename}</div>`;
+
   log.prepend(item);
 }
 
-function clearAll() {
-  document.getElementById('grid').innerHTML = '';
-  document.getElementById('log').innerHTML = '';
-  known.clear(); total = 0;
-  document.getElementById('count').textContent = '0 detections';
+function notify(text) {
+  const n = document.getElementById('notif');
+  document.getElementById('notif-body').textContent = text;
+
+  n.classList.add('show');
+  setTimeout(() => n.classList.remove('show'), 2500);
 }
 
 function poll() {
-  fetch(IMAGE_DIR)
-    .then(r => r.text())
-    .then(html => {
-      const doc = new DOMParser().parseFromString(html, 'text/html');
-      const files = [...doc.querySelectorAll('a[href]')]
-        .map(a => a.getAttribute('href'))
-        .filter(h => h.endsWith('.jpg') && !h.includes('/'))
-        .sort();
+  console.log("FETCHING /images...");
+
+  fetch(`${SERVER}/images`)
+    .then(r => r.json())
+    .then(files => {
+      console.log("DATA:", files);
+
       files.forEach(f => {
-        if (!known.has(f)) {
-          known.add(f); total++;
-          addCard(f);
-          addLog(f);
-          notify(f);
-          document.getElementById('count').textContent = `${total} detection${total !== 1 ? 's' : ''}`;
+        if (!known.has(f.filename)) {
+          known.add(f.filename);
+          total++;
+
+          addCard(f.url, f.filename);
+          addLog(f.filename);
+          notify(f.filename);
+
+          document.getElementById('count').textContent =
+            `${total} detection${total !== 1 ? 's' : ''}`;
         }
       });
-    }).catch(() => {});
+    })
+    .catch(err => console.log("ERROR:", err));
 }
 
 poll();
