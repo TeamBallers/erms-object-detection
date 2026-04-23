@@ -2,7 +2,7 @@ import requests
 import time
 from picamera2 import Picamera2
 
-SERVER_URL = "http://100.112.38.70:8000/detect" # make sure to use whatever IP is hosting the server
+SERVER_URL = "http://<ip>:8000/detect" # make sure to use whatever IP is hosting the server
 
 picam2 = Picamera2()
 
